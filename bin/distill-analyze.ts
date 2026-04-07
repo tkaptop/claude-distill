@@ -135,6 +135,21 @@ async function main() {
         cwd: r.cwd,
         ts: r.ts,
       })),
+      recent_prompts: hooksData.prompts.slice(-100).map(p => ({
+        prompt: p.prompt.slice(0, 200),
+        cwd: p.cwd,
+        ts: p.ts,
+      })),
+      tool_usage_summary: (() => {
+        const counts: Record<string, number> = {};
+        for (const t of hooksData.toolUses) {
+          counts[t.tool] = (counts[t.tool] ?? 0) + 1;
+        }
+        return Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 15)
+          .map(([tool, count]) => ({ tool, count }));
+      })(),
     } : null,
   };
 

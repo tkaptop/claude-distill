@@ -5,7 +5,7 @@ INPUT=$(cat)
 
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"')
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')
-TOOL_INPUT=$(echo "$INPUT" | jq -c '.tool_input // {}')
+TOOL_INPUT=$(echo "$INPUT" | jq -c '.tool_input // {}' 2>/dev/null || echo '{}')
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "unknown"')
 CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 TS=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)

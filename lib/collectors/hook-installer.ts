@@ -1,12 +1,17 @@
 /**
  * hook-installer.ts — Install/uninstall Claude Distill hooks in CC settings.json
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
 const SETTINGS_PATH = join(homedir(), '.claude', 'settings.json');
-const HOOKS_DIR = join(homedir(), '.claude', 'skills', 'claude-distill', 'hooks');
+// Detect hooks dir at runtime: prefer __dirname-based, fallback to default
+const HOOKS_DIR = (() => {
+  const fromModule = join(import.meta.dir, '..', '..', 'hooks');
+  if (existsSync(fromModule)) return fromModule;
+  return join(homedir(), '.claude', 'skills', 'claude-distill', 'hooks');
+})();
 
 interface HookEntry {
   type: string;
@@ -67,11 +72,24 @@ function readSettings(): Settings {
 function writeSettings(settings: Settings): void {
   const tmp = SETTINGS_PATH + '.tmp';
   writeFileSync(tmp, JSON.stringify(settings, null, 2) + '\n');
-  const { renameSync } = require('node:fs');
   renameSync(tmp, SETTINGS_PATH);
 }
 
-export function installHooks(): { installed: string[]; skipped: string[] } {
+export function checkDependencies(): { jq: boolean } {
+  try {
+    const result = Bun.spawnSync(['which', 'jq']);
+    return { jq: result.exitCode === 0 };
+  } catch {
+    return { jq: false };
+  }
+}
+
+export function installHooks(): { installed: string[]; skipped: string[]; warnings: string[] } {
+  const warnings: string[] = [];
+  const deps = checkDependencies();
+  if (!deps.jq) {
+    warnings.push('jq is not installed. Hooks will silently fail. Install: brew install jq');
+  }
   const settings = readSettings();
   if (!settings.hooks) settings.hooks = {};
 
@@ -95,7 +113,7 @@ export function installHooks(): { installed: string[]; skipped: string[] } {
     writeSettings(settings);
   }
 
-  return { installed, skipped };
+  return { installed, skipped, warnings };
 }
 
 export function uninstallHooks(): { removed: string[] } {
