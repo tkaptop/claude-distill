@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# claude-distill setup — build binary + register skills
+set -e
+
+INSTALL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Check for Bun
+if ! command -v bun >/dev/null 2>&1; then
+  echo "Error: bun is required but not installed." >&2
+  echo "Install: curl -fsSL https://bun.sh/install | bash" >&2
+  exit 1
+fi
+
+echo "Building claude-distill..."
+cd "$INSTALL_DIR"
+bun install --frozen-lockfile 2>/dev/null || bun install
+
+mkdir -p dist
+bun build bin/distill-analyze.ts --compile --outfile dist/distill-analyze 2>/dev/null || {
+  echo "Binary compilation skipped (will use bun run instead)"
+}
+
+echo ""
+echo "claude-distill installed successfully!"
+echo ""
+echo "Usage:"
+echo "  /distill              — Run in Claude Code (recommended)"
+echo "  bun run distill       — Run standalone"
+echo ""
+echo "To enable real-time data collection (optional):"
+echo "  /distill-install"

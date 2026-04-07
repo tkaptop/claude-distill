@@ -1,0 +1,22 @@
+{
+  "name": "claude-distill",
+  "version": "0.1.0",
+  "description": "Distill your AI work style from Claude Code usage data into a portable skill file",
+  "main": "bin/distill-analyze.ts",
+  "bin": {
+    "claude-distill": "bin/distill-analyze.ts"
+  },
+  "scripts": {
+    "build": "bun build bin/distill-analyze.ts --compile --outfile dist/distill-analyze",
+    "test": "bun test",
+    "distill": "bun run bin/distill-analyze.ts"
+  },
+  "keywords": ["claude-code", "ai", "skill", "distill", "workflow", "personalization"],
+  "license": "MIT",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

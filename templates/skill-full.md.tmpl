@@ -1,0 +1,29 @@
+---
+name: {{name}}-style
+version: {{version}}
+generated_by: claude-distill
+generated_at: {{generated_at}}
+sessions_analyzed: {{sessions_analyzed}}
+confidence: {{confidence}}
+type: full
+---
+
+# {{name}}'s Work Style (Full Profile)
+
+> This is the complete work style profile with {{total_rules}} rules.
+> For the compact version (top {{compact_count}} rules), see skill-compact.md.
+
+{{#each dimensions}}
+## {{this.title}}
+{{#each this.rules}}
+- {{this.text}} *(source: {{this.source}}, priority: {{this.priority}})*
+{{/each}}
+
+{{/each}}
+
+## Statistics
+- Sessions analyzed: {{sessions_analyzed}}
+- Confidence: {{confidence}}
+- Total rules: {{total_rules}}
+- Friction events analyzed: {{friction_count}}
+- Prompts analyzed: {{prompt_count}}
