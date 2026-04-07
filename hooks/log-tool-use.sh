@@ -11,12 +11,17 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
 TS=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)
 
 LOG_DIR="$HOME/.claude-distill/collected"
-mkdir -p "$LOG_DIR"
+[ -d "$LOG_DIR" ] || mkdir -p "$LOG_DIR"
 
-# For PostToolUse, also capture result summary (truncated to avoid huge logs)
+# For PostToolUse, capture result summary (truncated, stored as string to avoid broken JSON)
 TOOL_RESULT=""
 if [ "$HOOK_EVENT" = "PostToolUse" ]; then
-  TOOL_RESULT=$(echo "$INPUT" | jq -c '.tool_result // {}' | head -c 500)
+  FULL_RESULT=$(echo "$INPUT" | jq -c '.tool_result // {}' 2>/dev/null || echo '{}')
+  if [ ${#FULL_RESULT} -gt 500 ]; then
+    TOOL_RESULT="${FULL_RESULT:0:497}..."
+  else
+    TOOL_RESULT="$FULL_RESULT"
+  fi
 fi
 
 jq -n -c \

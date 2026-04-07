@@ -10,7 +10,7 @@ SOURCE=$(echo "$INPUT" | jq -r '.source // ""')
 TS=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)
 
 LOG_DIR="$HOME/.claude-distill/collected"
-mkdir -p "$LOG_DIR"
+[ -d "$LOG_DIR" ] || mkdir -p "$LOG_DIR"
 
 jq -n -c \
   --arg ts "$TS" \
