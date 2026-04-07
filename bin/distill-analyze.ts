@@ -18,6 +18,7 @@ import { analyzeDecisions } from '../lib/analyzers/decisions';
 import { analyzeWorkflow } from '../lib/analyzers/workflow';
 import { analyzeFriction } from '../lib/analyzers/friction';
 import { analyzeTools } from '../lib/analyzers/tools';
+import { parseHooksData } from '../lib/parsers/hooks-data';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -32,15 +33,21 @@ async function main() {
   // Phase 1: Parse data sources
   console.log('Reading data sources...');
 
-  const [historyData, sessionData, facetsData] = await Promise.all([
+  const [historyData, sessionData, facetsData, hooksData] = await Promise.all([
     parseHistory(join(CLAUDE_DIR, 'history.jsonl')),
     parseSessionMeta(join(CLAUDE_DIR, 'usage-data', 'session-meta')),
     parseFacets(join(CLAUDE_DIR, 'usage-data', 'facets')),
+    parseHooksData(),
   ]);
 
   console.log(`  history.jsonl: ${historyData.totalCount} entries`);
   console.log(`  session-meta:  ${sessionData.totalCount} sessions`);
   console.log(`  facets:        ${facetsData.totalCount} facets`);
+  if (hooksData.hasData) {
+    console.log(`  hooks data:    ${hooksData.prompts.length} prompts, ${hooksData.rejections.length} rejections, ${hooksData.toolUses.length} tool events`);
+  } else {
+    console.log(`  hooks data:    not installed (run /distill-install to enable)`);
+  }
 
   // Diagnose data sufficiency
   const totalSessions = sessionData.totalCount || historyData.sessionIds.size;
@@ -117,6 +124,18 @@ async function main() {
     red_flags: friction,
     tools,
     projects,
+    hooks_collected: hooksData.hasData ? {
+      prompts_count: hooksData.prompts.length,
+      rejections_count: hooksData.rejections.length,
+      tool_events_count: hooksData.toolUses.length,
+      sessions_count: hooksData.sessions.length,
+      rejections: hooksData.rejections.slice(0, 50).map(r => ({
+        tool: r.tool,
+        input_summary: JSON.stringify(r.input).slice(0, 200),
+        cwd: r.cwd,
+        ts: r.ts,
+      })),
+    } : null,
   };
 
   // Phase 4: Write output
